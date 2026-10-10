@@ -82,7 +82,9 @@ def order_rows():
       </li>""" for p in PRODUCTS)
 
 
-min_price = min(p["price"] for p in PRODUCTS)
+# Bosh rasm Milliy Chips — belgida aynan shu mahsulot narxi ko'rsatiladi (eng arzon narx emas)
+HERO = PRODUCTS[0]
+HERO_W = round(HERO['unit'][1] * 1000)   # 0.9 kg -> 900
 flavors_all = []
 for p in PRODUCTS:
     for u, r, _ in p["flavors"]:
@@ -151,7 +153,7 @@ h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;letter-spacing:-.01
 .seal{position:absolute;right:-10px;bottom:-14px;width:136px;height:136px;border-radius:50%;background:var(--saffron);color:var(--plum);
   display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.1;transform:rotate(-9deg);
   box-shadow:0 14px 34px rgba(0,0,0,.35)}
-.seal small{font-weight:800;font-size:.78rem}
+.seal small{font-weight:800;font-size:.72rem;max-width:80%}
 .seal b{font-family:var(--display);font-size:1.55rem}
 
 /* marquee */
@@ -431,7 +433,7 @@ html = f"""<title>Milliy Chips</title>
     <div class="hero-art">
       <img class="hi" src="{img(PRODUCTS[0]['photos'][0], 1400)}" alt="Milliy Chips qutilari">
       {logo()}
-      <div class="seal"><small>{L("narxlar", "цены от")}</small><b>{money(min_price)}</b><small>{L("so'mdan", "сум")}</small></div>
+      <div class="seal"><small>Milliy Chips</small><b>{money(HERO['price'])}</b><small>{L(f"so'm · {HERO_W} g", f"сум · {HERO_W} г")}</small></div>
     </div>
   </div>
 </section>
