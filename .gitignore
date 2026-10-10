@@ -1,0 +1,7 @@
+node_modules/
+__pycache__/
+*.pyc
+src/catalog.html
+src/site.html
+src/Milliy-Chips-katalog.pdf
+src/shot-*.jpg
