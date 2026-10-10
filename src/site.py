@@ -392,8 +392,48 @@ JS = r"""
 })();
 """
 
-html = f"""<title>Milliy Chips</title>
-<meta name="description" content="Milliy Chips, 5D va KAN mahsulotlari: narxlar va buyurtma.">
+SEO_TITLE = "Milliy Chips — eng mazali chipslar, narxlar va buyurtma"
+SEO_DESC = ("Milliy Chips rasmiy sayti: Milliy Chips 900 g (smetana, shashlik, salyami, pishloq), 5D Chips va KAN tayoqchalari. "
+            f"Do'konlar uchun ulgurji narxlar, buyurtma: {PHONE}.")
+JSON_LD = json.dumps({
+    "@context": "https://schema.org",
+    "@graph": [
+        {"@type": "Organization", "@id": SITE_URL + "/#org", "name": "Milliy Chips", "alternateName": ["Milliy chips", "Миллий чипс"],
+         "url": SITE_URL + "/", "logo": SITE_URL + "/apple-touch-icon.png", "telephone": PHONE_DIGITS,
+         "parentOrganization": {"@type": "Organization", "name": "KAN corporation"}},
+        {"@type": "WebSite", "@id": SITE_URL + "/#site", "url": SITE_URL + "/", "name": "Milliy Chips", "inLanguage": ["uz", "ru"],
+         "publisher": {"@id": SITE_URL + "/#org"}},
+    ] + [
+        {"@type": "Product", "name": p["name_uz"], "alternateName": RU_TITLE.get(p["key"], p["name_ru"]),
+         "description": p["desc_uz"], "brand": {"@type": "Brand", "name": p["brand"]},
+         "image": SITE_URL + "/og.jpg", "url": f"{SITE_URL}/#p-{p['key']}",
+         "offers": {"@type": "Offer", "price": p["price"], "priceCurrency": "UZS", "url": f"{SITE_URL}/#p-{p['key']}",
+                    "seller": {"@id": SITE_URL + "/#org"}}}
+        for p in PRODUCTS
+    ],
+}, ensure_ascii=False)
+
+HEAD = f"""<title>{esc(SEO_TITLE)}</title>
+<meta name="description" content="{esc(SEO_DESC)}">
+<link rel="canonical" href="{SITE_URL}/">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#2A1233">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Milliy Chips">
+<meta property="og:locale" content="uz_UZ">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:url" content="{SITE_URL}/">
+<meta property="og:title" content="{esc(SEO_TITLE)}">
+<meta property="og:description" content="{esc(SEO_DESC)}">
+<meta property="og:image" content="{SITE_URL}/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{JSON_LD}</script>"""
+
+html = f"""{HEAD}
 <style>
 {font_faces()}
 {CSS}

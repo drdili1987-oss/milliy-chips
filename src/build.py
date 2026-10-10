@@ -116,7 +116,12 @@ def back():
 
 CSS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog.css"), encoding="utf-8").read()
 
-html = f"""<title>Milliy Chips katalogi</title>
+html = f"""<title>Milliy Chips katalogi — narxlar va mahsulotlar</title>
+<meta name="description" content="Milliy Chips, 5D Chips va KAN tayoqchalari katalogi: narxlar, qadoqlar, ta'mlar. Buyurtma: {PHONE}.">
+<link rel="canonical" href="{SITE_URL}/katalog">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="Milliy Chips katalogi">
+<meta property="og:image" content="{SITE_URL}/og.jpg">
 <style>
 {font_faces()}
 {CSS}

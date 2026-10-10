@@ -41,3 +41,16 @@ Sayt: `https://<foydalanuvchi>.github.io/milliy-chips/`, katalog: `.../milliy-ch
 [vercel.com/new](https://vercel.com/new) → **Import Git Repository** → `milliy-chips` → **Deploy**.
 Sozlamalar `vercel.json` da — hech narsani o'zgartirish shart emas (Framework: Other, build yo'q).
 `src/` papkasi `.vercelignore` orqali saytga yuklanmaydi. Har bir `git push` dan keyin Vercel saytni o'zi yangilaydi.
+
+## Google va Yandex'da chiqishi uchun
+
+Saytda tayyor: sarlavha va tavsif, `canonical`, Open Graph rasmi (`og.jpg` — Telegram/Facebook havolada ko'rinadi),
+mahsulotlar uchun structured data (schema.org), `robots.txt`, `sitemap.xml`, favicon.
+Bularni `src/seo.py` yaratadi (`yangilash.sh` ichida avtomatik). Asosiy manzil: `src/catalog_data.py` → `SITE_URL`.
+
+Qo'lda qilinadigan ishlar:
+1. **Google Search Console** — <https://search.google.com/search-console> → *URL prefix* → `https://milliy-chips.vercel.app/`
+   → tasdiqlash usuli *HTML tag* → kodni `site.py` dagi `HEAD` ga qo'shing → *Sitemaps*: `sitemap.xml` → *URL inspection* → *Request indexing*.
+2. **Yandex Webmaster** — <https://webmaster.yandex.com> (O'zbekistonda ko'p ishlatiladi), xuddi shunday tasdiqlash va sitemap.
+3. **Google Business Profile** — <https://business.google.com> — xaritada va qidiruvda kompaniya kartochkasi.
+4. Instagram, Telegram kanal va boshqa sahifalarga sayt havolasini qo'ying.

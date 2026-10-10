@@ -9,6 +9,7 @@ FOTO = None
 FONTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "node_modules/@fontsource")
 PHONE = "+998 (33) 100 17 11"
 PRICE_DATE = "2026-yil oktabr"
+SITE_URL = "https://milliy-chips.vercel.app"   # asosiy (canonical) manzil; domen olinsa shu yerda almashtiring
 
 # ---------------------------------------------------------------- narxni fayl nomidan olish
 PRICE_RE = re.compile(r"^\s*(\d{2})[ .,]?(\d{3})")
