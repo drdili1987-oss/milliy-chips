@@ -1,0 +1,22 @@
+{
+  "milliy": {
+    "name": "Milliy Chips",
+    "pack": "900 g quti",
+    "price": 46000
+  },
+  "5dbag": {
+    "name": "5D Chips 20 g",
+    "pack": "Blok: 60 dona × 20 g",
+    "price": 34000
+  },
+  "5dbox": {
+    "name": "5D vaznli chips",
+    "pack": "2 kg quti",
+    "price": 35000
+  },
+  "kan": {
+    "name": "KAN tayoqchalari",
+    "pack": "2 kg quti",
+    "price": 33000
+  }
+}

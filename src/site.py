@@ -105,6 +105,7 @@ CSS = r"""
   color-scheme:light;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:calc(76px + env(safe-area-inset-top,0px))}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
 html[lang="uz"] [data-l="ru"],html[lang="ru"] [data-l="uz"]{display:none}
@@ -245,7 +246,19 @@ td.strong{font-family:var(--display);font-weight:800;font-size:1.2rem;color:var(
 .msg{font:500 .88rem/1.5 var(--body);white-space:pre-wrap;background:var(--mist);border-radius:14px;padding:12px 14px;min-height:170px;max-height:240px;overflow:auto;color:var(--ink);border:0;width:100%;resize:none}
 .oacts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .oacts .btn-p{background:var(--plum);color:#fff}
-.ostatus{min-height:1.5em;margin:10px 0 0;font-weight:700;color:#2F7D32}
+.ostatus{min-height:1.5em;margin:10px 0 0;font-weight:700;color:var(--muted)}
+.ostatus.err{color:var(--chili)}
+.btn-send{width:100%;min-height:56px;font-size:1.08rem;margin-top:4px}
+.btn-send[disabled]{opacity:.6}
+.req{color:var(--chili)}
+.ferr{font-size:.85rem;font-weight:700;color:var(--chili);min-height:0}
+.field input[aria-invalid="true"]{border-color:var(--chili)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.done{margin-top:6px;padding:18px;border-radius:16px;background:#EAF6EA;color:#1F5F23}
+.done b{display:block;font-family:var(--display);font-size:1.05rem;margin-bottom:6px}
+.done p{margin:0 0 12px}
+.fallback{margin-top:6px;padding:16px;border-radius:16px;background:var(--mist)}
+.fallback p{margin:0 0 10px;font-weight:700;color:var(--chili)}
 .ostep{margin:14px 0 0;padding-left:20px;color:var(--muted);font-size:.9rem}
 .ostep li{margin-bottom:4px}
 .phonebox{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding:14px 16px;border-radius:16px;border:2px dashed var(--line)}
@@ -300,10 +313,14 @@ JS = r"""
   const T = {
     uz:{cur:"so'm", hello:"Assalomu alaykum! Buyurtma bermoqchiman:", total:"Jami", name:"Do'kon / ism", phone:"Telefon", addr:"Manzil", note:"Izoh",
         empty:"Mahsulot tanlanmagan. Yuqoridagi + tugmasi bilan soni kiriting.", items:n=>`${n} ta qadoq`, copied:"Nusxa olindi. Endi Telegramni ochib, xabarga joylang.",
-        copyFail:"Avtomatik nusxa olinmadi: matn belgilandi, o'zingiz nusxa oling.", phoneCopied:"Raqam nusxalandi."},
+        copyFail:"Avtomatik nusxa olinmadi: matn belgilandi, o'zingiz nusxa oling.", phoneCopied:"Raqam nusxalandi.",
+        needItems:"Avval kamida bitta mahsulot sonini tanlang.", badPhone:"Telefon raqamini to'liq kiriting, masalan +998 90 123 45 67.",
+        sending:"Yuborilmoqda…", done:id=>`Rahmat! Buyurtma №${id} qabul qilindi`},
     ru:{cur:"сум", hello:"Здравствуйте! Хочу сделать заказ:", total:"Итого", name:"Магазин / имя", phone:"Телефон", addr:"Адрес", note:"Комментарий",
         empty:"Товары не выбраны. Укажите количество кнопкой + выше.", items:n=>`${n} упак.`, copied:"Скопировано. Откройте Telegram и вставьте сообщение.",
-        copyFail:"Не удалось скопировать автоматически: текст выделен, скопируйте вручную.", phoneCopied:"Номер скопирован."}
+        copyFail:"Не удалось скопировать автоматически: текст выделен, скопируйте вручную.", phoneCopied:"Номер скопирован.",
+        needItems:"Сначала выберите количество хотя бы одного товара.", badPhone:"Введите номер полностью, например +998 90 123 45 67.",
+        sending:"Отправка…", done:id=>`Спасибо! Заказ №${id} принят`}
   };
   let lang = 'uz';
   try { const s = localStorage.getItem('mc-lang'); if (s === 'ru' || s === 'uz') lang = s; } catch(e) {}
@@ -311,6 +328,7 @@ JS = r"""
   const $ = (s, el=document) => el.querySelector(s);
   const $$ = (s, el=document) => [...el.querySelectorAll(s)];
   const msgEl = $('#o-msg'), statusEl = $('#o-status');
+  let sending = false;
 
   function setLang(l){
     lang = l; root.lang = l;
@@ -360,6 +378,7 @@ JS = r"""
     const m = message();
     msgEl.value = m || t.empty;
     $('#o-copy').disabled = !m;
+    $('#o-send').disabled = sending;
   }
 
   document.addEventListener('click', e => {
@@ -387,6 +406,39 @@ JS = r"""
   }
   $('#o-copy').addEventListener('click', () => { const m = message(); if (m) copy(m, T[lang].copied, msgEl); });
   $$('.copy-phone').forEach(b => b.addEventListener('click', () => copy(PHONE, T[lang].phoneCopied, null)));
+
+  const phoneEl = $('#o-phone'), phoneErr = $('#o-phone-err');
+  function phoneOk(){ const d = phoneEl.value.replace(/\D/g, ''); return d.length >= 9 && d.length <= 15; }
+  phoneEl.addEventListener('input', () => { if (phoneOk()) { phoneErr.textContent = ''; phoneEl.removeAttribute('aria-invalid'); } });
+
+  function showStatus(text, isErr){ statusEl.textContent = text; statusEl.classList.toggle('err', !!isErr); }
+
+  $('#o-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (sending) return;
+    const t = T[lang];
+    $('#o-fallback').hidden = true;
+    if (!Object.values(cart).some(q => q > 0)) { showStatus(t.needItems, true); $('#buyurtma').scrollIntoView({behavior:'smooth'}); return; }
+    if (!phoneOk()) { phoneErr.textContent = t.badPhone; phoneEl.setAttribute('aria-invalid', 'true'); phoneEl.focus(); showStatus('', false); return; }
+    const payload = { items: {}, name: $('#o-name').value, phone: phoneEl.value, addr: $('#o-addr').value,
+                      note: $('#o-note').value, website: $('#o-website').value, lang };
+    for (const k in cart) if (cart[k] > 0) payload.items[k] = cart[k];
+    sending = true; render(); showStatus(t.sending, false);
+    try {
+      const r = await fetch('/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) throw new Error(data.error || ('http ' + r.status));
+      showStatus('', false);
+      $('#o-done-title').textContent = t.done(data.id);
+      $('#o-done').hidden = false; $('#o-send').hidden = true;
+      Object.keys(cart).forEach(k => cart[k] = 0);
+      ['#o-note'].forEach(id => $(id).value = '');
+    } catch (err) {
+      if (String(err.message) === 'phone') { phoneErr.textContent = t.badPhone; phoneEl.focus(); showStatus('', false); }
+      else { showStatus('', false); $('#o-fallback').hidden = false; }
+    } finally { sending = false; render(); }
+  });
+  $('#o-new').addEventListener('click', () => { $('#o-done').hidden = true; $('#o-send').hidden = false; $('#mahsulotlar').scrollIntoView({behavior:'smooth'}); });
 
   setLang(lang);
 })();
@@ -513,8 +565,8 @@ html = f"""{HEAD}
   <div class="wrap">
     <div class="sec-head">
       <div><p class="eyebrow">{L("Tez buyurtma", "Быстрый заказ")}</p><h2>{L("Buyurtma berish", "Оформить заказ")}</h2></div>
-      <p>{L("Sonini tanlang, ma'lumotlaringizni yozing va tayyor xabarni Telegram orqali yuboring.",
-           "Выберите количество, заполните данные и отправьте готовое сообщение в Telegram.")}</p>
+      <p>{L("Sonini tanlang, telefon raqamingizni yozing va \"Buyurtma berish\"ni bosing. Buyurtma darhol bizga yetib boradi.",
+           "Выберите количество, укажите телефон и нажмите «Отправить заказ». Заказ сразу придёт к нам.")}</p>
     </div>
     <div class="ogrid">
       <div class="ocard">
@@ -523,23 +575,33 @@ html = f"""{HEAD}
         <div class="ototal"><span>{L("Jami", "Итого")}</span><output id="o-total">0</output></div>
         <p class="ocount" id="o-count"></p>
       </div>
-      <form class="ocard" id="o-form" onsubmit="return false">
+      <form class="ocard" id="o-form" novalidate>
         <h3>{L("Ma'lumotlaringiz", "Ваши данные")}</h3>
         <div class="field"><label for="o-name">{L("Do'kon nomi yoki ismingiz", "Название магазина или имя")}</label>
-          <input id="o-name" autocomplete="organization" data-ph-uz="Masalan: Baraka do'koni" data-ph-ru="Например: магазин Барака"></div>
-        <div class="field"><label for="o-phone">{L("Telefon", "Телефон")}</label>
-          <input id="o-phone" type="tel" autocomplete="tel" data-ph-uz="+998 __ ___ __ __" data-ph-ru="+998 __ ___ __ __"></div>
+          <input id="o-name" maxlength="100" autocomplete="organization" data-ph-uz="Masalan: Baraka do'koni" data-ph-ru="Например: магазин Барака"></div>
+        <div class="field"><label for="o-phone">{L("Telefon", "Телефон")} <span class="req">*</span></label>
+          <input id="o-phone" type="tel" maxlength="32" required autocomplete="tel" inputmode="tel" data-ph-uz="+998 __ ___ __ __" data-ph-ru="+998 __ ___ __ __" aria-describedby="o-phone-err">
+          <span class="ferr" id="o-phone-err"></span></div>
         <div class="field"><label for="o-addr">{L("Manzil", "Адрес")}</label>
-          <input id="o-addr" autocomplete="street-address" data-ph-uz="Shahar, mahalla, ko'cha" data-ph-ru="Город, махалля, улица"></div>
+          <input id="o-addr" maxlength="200" autocomplete="street-address" data-ph-uz="Shahar, mahalla, ko'cha" data-ph-ru="Город, махалля, улица"></div>
         <div class="field"><label for="o-note">{L("Izoh", "Комментарий")}</label>
-          <textarea id="o-note" rows="2" data-ph-uz="Masalan: Milliy Chips 2 ta smetana, 1 ta pishloq" data-ph-ru="Например: Milliy Chips 2 сметана, 1 сыр"></textarea></div>
-        <div class="field"><label for="o-msg">{L("Tayyor xabar", "Готовое сообщение")}</label>
-          <textarea id="o-msg" class="msg" readonly></textarea></div>
-        <div class="oacts">
-          <button type="button" class="btn btn-p" id="o-copy">{L("1. Xabarni nusxalash", "1. Скопировать")}</button>
-          <a class="btn btn-y" href="{TG_LINK}" target="_blank" rel="noopener">{L("2. Telegramda ochish", "2. Открыть Telegram")}</a>
+          <textarea id="o-note" rows="2" maxlength="500" data-ph-uz="Masalan: Milliy Chips 2 ta smetana, 1 ta pishloq" data-ph-ru="Например: Milliy Chips 2 сметана, 1 сыр"></textarea></div>
+        <div class="hp" aria-hidden="true"><label for="o-website">Website</label><input id="o-website" tabindex="-1" autocomplete="off"></div>
+        <button type="submit" class="btn btn-y btn-send" id="o-send">{L("Buyurtma berish", "Отправить заказ")}</button>
+        <p class="ostatus" id="o-status" role="status" aria-live="polite"></p>
+        <div class="done" id="o-done" hidden>
+          <b id="o-done-title"></b>
+          <p>{L("Buyurtmangiz bizga yetib bordi. Tez orada siz bilan bog'lanamiz.", "Ваш заказ получен. Мы скоро свяжемся с вами.")}</p>
+          <button type="button" class="mini" id="o-new">{L("Yangi buyurtma", "Новый заказ")}</button>
         </div>
-        <p class="ostatus" id="o-status" role="status"></p>
+        <div class="fallback" id="o-fallback" hidden>
+          <p>{L("Buyurtmani avtomatik yuborib bo'lmadi. Xabarni nusxalab, Telegramda yuboring:", "Не удалось отправить заказ автоматически. Скопируйте сообщение и отправьте в Telegram:")}</p>
+          <textarea id="o-msg" class="msg" readonly aria-label="Buyurtma matni"></textarea>
+          <div class="oacts">
+            <button type="button" class="btn btn-p" id="o-copy">{L("1. Xabarni nusxalash", "1. Скопировать")}</button>
+            <a class="btn btn-y" href="{TG_LINK}" target="_blank" rel="noopener">{L("2. Telegramda ochish", "2. Открыть Telegram")}</a>
+          </div>
+        </div>
         <div class="phonebox"><span>{L("Yoki qo'ng'iroq qiling", "Или позвоните")}<br><b>{PHONE}</b></span>
           <button type="button" class="mini copy-phone">{L("Raqamni nusxalash", "Копировать номер")}</button></div>
       </form>

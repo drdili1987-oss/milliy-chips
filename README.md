@@ -9,6 +9,7 @@ Narxlar `src/foto/` dagi rasm nomlaridan avtomatik olinadi.
 | `katalog/Milliy-Chips-katalog.pdf` | A4 katalog, 7 sahifa — chop etish va yuborish uchun |
 | `katalog/sahifalar/*.jpg` | Katalog sahifalari rasm ko'rinishida — Telegram/Instagram uchun |
 | `katalog/index.html` | Katalogning web ko'rinishi |
+| `api/order.js` | Vercel funksiyasi: saytdagi buyurtmani Telegram bot orqali yuboradi |
 | `src/` | Katalog va saytni yig'uvchi kod, asl rasmlar va logo |
 
 Hamma rasm va shriftlar HTML ichiga joylangan — `index.html` ni istalgan hostingga bitta fayl qilib yuklash mumkin.
@@ -54,3 +55,21 @@ Qo'lda qilinadigan ishlar:
 2. **Yandex Webmaster** — <https://webmaster.yandex.com> (O'zbekistonda ko'p ishlatiladi), xuddi shunday tasdiqlash va sitemap.
 3. **Google Business Profile** — <https://business.google.com> — xaritada va qidiruvda kompaniya kartochkasi.
 4. Instagram, Telegram kanal va boshqa sahifalarga sayt havolasini qo'ying.
+
+## Buyurtmalar Telegramga (bot)
+
+Mijoz "Buyurtma berish" ni bosganda `api/order.js` buyurtmani tekshiradi, narxni serverda qayta hisoblaydi
+(`api/_prices.json`, `yangilash.sh` yaratadi) va Telegram bot orqali yuboradi. Token kodda saqlanmaydi.
+
+Sozlash (bir marta):
+1. Telegramda **@BotFather** → `/newbot` → nom va username bering → **token** ni oling.
+2. Yangi botingizni oching va **Start** bosing (bot sizga yoza olishi uchun shart).
+3. Chat ID: brauzerda `https://api.telegram.org/bot<TOKEN>/getUpdates` ni oching → `"chat":{"id": ...}` raqami.
+   Guruhga kelsin desangiz: botni guruhga qo'shing, guruhda biror xabar yozing, so'ng getUpdates (ID manfiy bo'ladi, masalan `-100...`).
+4. Vercel → loyiha → **Settings → Environment Variables**:
+   - `TELEGRAM_BOT_TOKEN` = token
+   - `TELEGRAM_CHAT_ID` = chat ID (bir nechta bo'lsa vergul bilan: `111,222`)
+5. Vercel → **Deployments** → oxirgisi → **Redeploy** (o'zgaruvchilar faqat yangi deploydan keyin ishlaydi).
+
+Funksiya ishlamasa (sozlanmagan, GitHub Pages'da yoki internet uzilsa) sayt avtomatik eski usulni ko'rsatadi:
+xabarni nusxalash va Telegramni ochish.

@@ -27,6 +27,7 @@ wrap catalog.html ../katalog/index.html
 mv Milliy-Chips-katalog.pdf ../katalog/
 rm -f ../katalog/sahifalar/*.jpg
 pdftoppm -r 130 -jpeg -jpegopt quality=88 ../katalog/Milliy-Chips-katalog.pdf ../katalog/sahifalar/sahifa
+python3 api_data.py foto ..                      # api/_prices.json (server narxlari)
 python3 seo.py foto ..                           # robots.txt, sitemap.xml, favicon, og.jpg
 rm -f catalog.html site.html
 echo "Tayyor: index.html, katalog/index.html, katalog/Milliy-Chips-katalog.pdf, katalog/sahifalar/"
