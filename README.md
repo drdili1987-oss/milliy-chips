@@ -35,3 +35,9 @@ Telefon raqami va narx sanasi: `src/catalog_data.py` → `PHONE`, `PRICE_DATE`.
 
 Settings → Pages → Source: *Deploy from a branch* → `main` / `(root)`.
 Sayt: `https://<foydalanuvchi>.github.io/milliy-chips/`, katalog: `.../milliy-chips/katalog/`.
+
+## Vercel
+
+[vercel.com/new](https://vercel.com/new) → **Import Git Repository** → `milliy-chips` → **Deploy**.
+Sozlamalar `vercel.json` da — hech narsani o'zgartirish shart emas (Framework: Other, build yo'q).
+`src/` papkasi `.vercelignore` orqali saytga yuklanmaydi. Har bir `git push` dan keyin Vercel saytni o'zi yangilaydi.
