@@ -259,6 +259,7 @@ td.strong{font-family:var(--display);font-weight:800;font-size:1.2rem;color:var(
 .done p{margin:0 0 12px}
 .fallback{margin-top:6px;padding:16px;border-radius:16px;background:var(--mist)}
 .fallback p{margin:0 0 10px;font-weight:700;color:var(--chili)}
+.fallback .ecode{margin:-4px 0 10px;font:600 .78rem var(--body);color:var(--muted)}
 .ostep{margin:14px 0 0;padding-left:20px;color:var(--muted);font-size:.9rem}
 .ostep li{margin-bottom:4px}
 .phonebox{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding:14px 16px;border-radius:16px;border:2px dashed var(--line)}
@@ -427,15 +428,15 @@ JS = r"""
     try {
       const r = await fetch('/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await r.json().catch(() => ({}));
-      if (!r.ok || !data.ok) throw new Error(data.error || ('http ' + r.status));
+      if (!r.ok || !data.ok) throw new Error((data.error || 'http') + ' ' + r.status + (data.tg_status ? ' tg' + data.tg_status : ''));
       showStatus('', false);
       $('#o-done-title').textContent = t.done(data.id);
       $('#o-done').hidden = false; $('#o-send').hidden = true;
       Object.keys(cart).forEach(k => cart[k] = 0);
       ['#o-note'].forEach(id => $(id).value = '');
     } catch (err) {
-      if (String(err.message) === 'phone') { phoneErr.textContent = t.badPhone; phoneEl.focus(); showStatus('', false); }
-      else { showStatus('', false); $('#o-fallback').hidden = false; }
+      if (String(err.message).startsWith('phone ')) { phoneErr.textContent = t.badPhone; phoneEl.focus(); showStatus('', false); }
+      else { showStatus('', false); $('#o-ecode').textContent = 'Kod: ' + (err.message || 'network'); $('#o-fallback').hidden = false; }
     } finally { sending = false; render(); }
   });
   $('#o-new').addEventListener('click', () => { $('#o-done').hidden = true; $('#o-send').hidden = false; $('#mahsulotlar').scrollIntoView({behavior:'smooth'}); });
@@ -597,6 +598,7 @@ html = f"""{HEAD}
         <div class="fallback" id="o-fallback" hidden>
           <p>{L("Buyurtmani avtomatik yuborib bo'lmadi. Xabarni nusxalab, Telegramda yuboring:", "Не удалось отправить заказ автоматически. Скопируйте сообщение и отправьте в Telegram:")}</p>
           <textarea id="o-msg" class="msg" readonly aria-label="Buyurtma matni"></textarea>
+          <p class="ecode" id="o-ecode"></p>
           <div class="oacts">
             <button type="button" class="btn btn-p" id="o-copy">{L("1. Xabarni nusxalash", "1. Скопировать")}</button>
             <a class="btn btn-y" href="{TG_LINK}" target="_blank" rel="noopener">{L("2. Telegramda ochish", "2. Открыть Telegram")}</a>

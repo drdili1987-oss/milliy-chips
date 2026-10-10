@@ -66,8 +66,13 @@ async function readBody(req) {
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+  if (req.method === "GET") {
+    // Diagnostika: sozlamalar bor-yo'qligi (qiymatlarning o'zi ko'rsatilmaydi)
+    const chatCount = String(process.env.TELEGRAM_CHAT_ID || "").split(",").filter((x) => x.trim()).length;
+    return res.status(200).json({ ok: true, service: "milliy-chips-order", token_set: !!process.env.TELEGRAM_BOT_TOKEN, chat_ids: chatCount });
+  }
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader("Allow", "POST, GET");
     return res.status(405).json({ ok: false, error: "method" });
   }
 
@@ -96,7 +101,10 @@ module.exports = async function handler(req, res) {
   ));
   const failed = results.filter((r) => r.status === "rejected");
   failed.forEach((f) => console.error(f.reason && f.reason.message));
-  if (failed.length === results.length) return res.status(502).json({ ok: false, error: "telegram" });
+  if (failed.length === results.length) {
+    const m = /telegram (\d+)/.exec(String(failed[0].reason && failed[0].reason.message));
+    return res.status(502).json({ ok: false, error: "telegram", tg_status: m ? Number(m[1]) : null });
+  }
 
   return res.status(200).json({ ok: true, id, total: order.total });
 };
